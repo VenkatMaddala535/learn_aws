@@ -1,0 +1,352 @@
+1.IaaS, PaaS, SaaS & Shared Responsibility
+    1. IaaS (Infrastructure as a Service)
+    - AWS provides servers, storage and networking.
+    - We manage OS, software and applications.
+    - Example: EC2.
+    - Remember: AWS gives the server; we manage it.
+
+    2. PaaS (Platform as a Service)
+    - AWS provides a ready-to-use platform.
+    - We deploy our application.
+    - AWS manages most server setup.
+    - Example: Elastic Beanstalk.
+    - Remember: AWS prepares the platform; we deploy.
+
+    3. SaaS (Software as a Service)
+    - Ready-made software available over the internet.
+    - We simply use the software.
+    - Example: Gmail, Salesforce.
+    - Remember: Just use the software.
+
+    4. Shared Responsibility Model
+    AWS and customers share security responsibilities.
+    AWS manages:
+    - Physical servers.
+    - Data centers.
+    - Hardware.
+    - Physical networking.
+    Customer manages:
+    - IAM permissions.
+    - Security groups.
+    - Application security.
+    - Data protection.
+    - EC2 OS updates.
+
+    Quick Revision
+        Concept	                Example	            Main idea
+        IaaS	                EC2	                Manage the server
+        PaaS	                Elastic Beanstalk	Deploy application
+        SaaS	                Gmail	            Use software
+        Shared Responsibility	AWS	Share           security work
+
+2.AWS Global Infrastructure 
+    1. Region: Geographical area where AWS provides cloud services. (Analogy: Country)
+
+    2. Availability Zone (AZ): Isolated infrastructure within a Region. (Analogy: State)
+
+    3. Data Center: Physical facility containing servers, storage and networking. (Analogy: Buildings)
+
+    4. Edge Location: Location that caches content closer to users for faster delivery. (Analogy: Nearby cache point)
+
+    Remember:
+    - Region → Geographic deployment
+    - AZ → High Availability
+    - Edge Location → Low Latency
+    - Multiple AZs → Fault Tolerance
+    - CloudFront → Uses Edge Locations for content delivery.
+
+3.EC2 – Short Notes
+
+    1. Instance Types
+        Define the hardware resources allocated to an EC2 instance:
+        - CPU
+        - RAM
+        - Network performance
+        - Storage performance
+        Examples: t2.micro, t3.medium, m5.large.
+
+    2. Instance Families
+        Categories designed for different workloads.
+        Family	Purpose
+        T, M	General Purpose – Balanced CPU/RAM
+        C	Compute Optimized – High CPU
+        R, X	Memory Optimized – High RAM
+        I, D	Storage Optimized – High storage performance
+        P, G	Accelerated Computing – GPU
+
+    3. Key Pairs
+        Used for secure SSH authentication.
+        - Public key → Stored on EC2.
+        - Private key → Kept securely by the user.
+        Example:
+        ssh -i my-key.pem ubuntu@<public-ip>
+
+
+    4. AMI (Amazon Machine Image)
+        A template used to launch EC2 instances.
+
+        Contains:
+        - Operating system
+        - Pre-installed software
+        - Configurations
+        - Block device mappings
+        Examples: Ubuntu, Amazon Linux, Windows Server.
+
+    5. Security Groups
+        Act as virtual firewalls for EC2 instances.
+        - Inbound → Controls incoming traffic.
+        - Outbound → Controls outgoing traffic.
+        - Stateful → Automatically allows return traffic.
+        - Supports allow rules, not deny rules.
+        Common ports:
+        - 22 → SSH
+        - 80 → HTTP
+        - 443 → HTTPS
+
+    6. User Data
+        Runs scripts during EC2 instance initialization.
+
+        Used to automate initial server configuration.
+
+        Example:
+        #!/bin/bash
+        apt update -y
+        apt install nginx -y
+        systemctl enable nginx
+        systemctl start nginx
+
+        Use cases: Installing Docker, Nginx, dependencies and starting applications.
+
+    Remember this EC2 launch flow
+    Component	    Question it answers
+    AMI	            Which OS?
+    Instance Type	How much CPU/RAM?
+    Instance Family	What workload?
+    Key Pair	    How to connect?
+    Security Group	Which traffic is allowed?
+    User Data	    What to execute at startup?
+
+4.EC2 Pricing Models – Short Notes
+
+    On-Demand → Pay as you use.
+    Reserved → Commit to a specific EC2 configuration.
+    Spot → Use spare AWS capacity; can be interrupted.
+    Savings Plans → Commit to spending a certain amount per hour.
+
+    Temporary testing → On-Demand.
+    Production server running continuously → Reserved.
+    Batch processing that can restart → Spot.
+    Long-term compute usage with flexibility to change instance configurations → Savings Plan
+
+    Reserved Instances vs Savings Plans
+    Reserved Instances	                    Savings Plans
+    Commit to an instance configuration	    Commit to spending ($/hour)
+    Less flexible	                        More flexible
+    Discounts based on reservation	        Discounts based on usage and plan type
+    Best for predictable EC2 usage	        Best when compute needs may change
+
+    Model	Short explanation
+    On-Demand	            Pay for what you use. No commitment.
+    Reserved Instances (RI)	Commit to a specific EC2 configuration for 1 or 3 years and get discounts.
+    Spot Instances	        Use unused AWS capacity at cheaper prices. AWS can interrupt instances.
+    Savings Plans	        Commit to a fixed compute spending amount ($/hour) for 1 or 3 years and get discounts.
+
+    Remember for interviews
+    - On-Demand → Pay as you go.
+    - Reserved → Commit to instance usage.
+    - Spot → Cheap but interruptible.
+    - Savings Plans → Commit to spending.
+
+5.EBS – Short Notes
+    EBS (Elastic Block Store): Block-level storage used with EC2 instances, like an external hard disk.
+    1. Volume Types
+    Type	    Usage
+    gp3 / gp2	General-purpose SSD
+    io1 / io2	High-performance SSD, databases
+    st1	        Frequently accessed large data
+    sc1	        Infrequently accessed data
+
+    2. Encryption
+    - Protects data stored in EBS.
+    - Uses AWS KMS keys.
+    - Supports encryption at rest and in transit.
+
+    3. Snapshots
+    - Backup of EBS volumes.
+    - Stored using AWS-managed S3 infrastructure.
+    - Incremental backups (only changed blocks after first snapshot).
+    - Can restore a new EBS volume from a snapshot.
+    - Can copy snapshots across AWS regions.
+
+    Interview points
+    - EBS = Block storage.
+    - EBS is AZ-specific.
+    - Snapshots = Backups.
+    - Encryption = Data protection.
+    - gp3 = General workloads.
+    - io2 = High-performance workloads.
+
+6.AWS EFS 
+    - EFS: Managed shared file storage service.
+    - Purpose: Allows multiple EC2 instances to access the same files.
+    - Protocol: NFS (Network File System).
+    - Availability: Accessible across multiple AZs.
+    - Auto Scaling: Automatically grows and shrinks.
+    - Encryption: Supports encryption at rest and in transit.
+    Example: Multiple EC2 instances sharing application upload files.
+
+    Remember:
+    - EBS → Block storage
+    - EFS → Shared file storage
+    - S3 → Object storage
+
+7.S3 – Short Notes
+    1. S3: AWS object storage used to store files, backups, logs, images, etc.
+
+    2. Bucket: Container used to store objects (files).
+
+    3. Object: Actual file stored in a bucket.
+
+    4. Key: Name/path used to identify an object.
+
+    5. Storage Classes:
+    - Standard – Frequently accessed data.
+    - Intelligent-Tiering – Automatically optimizes storage.
+    - Standard-IA – Infrequently accessed data.
+    - Glacier Instant – Archive with millisecond retrieval.
+    - Glacier Flexible – Archive with minutes-to-hours retrieval.
+    - Glacier Deep Archive – Cheapest, long-term archival.
+
+    6. Lifecycle Policy: Automatically moves objects between storage classes or deletes them based on age.
+
+    7. Versioning: Maintains multiple versions of objects to recover accidentally deleted or overwritten files.
+
+    Remember:
+    - S3 durability = 11 nines (99.999999999%).
+    - Versioning + Lifecycle = Data protection + Cost optimization.
+
+    Day 0       → S3 Standard
+    After 30d   → Standard-IA
+    After 90d   → Glacier
+    After 365d  → Deep Archive
+    After 7 yrs → Delete
+
+    S3 – Storage Classes (Days-wise)
+    Storage class	When to use
+    S3 Standard	Day 0 – Frequently accessed
+    Intelligent-Tiering	Access pattern unpredictable
+    Standard-IA	After 30 days – Infrequent access
+    Glacier Instant Retrieval	After 90 days – Archive
+    Glacier Flexible Retrieval	After 90 days – Long-term archive
+    Glacier Deep Archive	After 180 days – Cheapest archive
+
+8.S3 Security – Short Notes
+    1. Block Public Access: Prevents public access to S3 buckets and objects. Keep all four settings enabled by default.
+
+    2. Bucket Policy: JSON-based policy attached to an S3 bucket. Controls who can access what and which actions they can perform.
+
+    3. IAM Policy: Controls S3 permissions at the IAM user/role level.
+
+    4. ACL: Legacy access control mechanism. Avoid unless required.
+
+    5. Encryption:
+    - SSE-S3: AWS manages encryption keys.
+    - SSE-KMS: AWS KMS manages keys; provides more control and auditing.
+    - SSE-C: Customer provides encryption keys.
+    Remember: Block Public Access = Prevent public access. Bucket Policy = Control access. Encryption = Protect data.
+
+9.IAM – Short Notes
+    - IAM: Controls who can access AWS and what they can do.
+    - User: Identity for a person (Developer).
+    - Group: Collection of users (Developers group).
+    - Role: Provides temporary permissions to AWS services (EC2 accessing S3).
+    - Policy: JSON document defining permissions (Allow/Deny).
+    - Least Privilege: Give only the minimum permissions required.
+    - MFA: Extra security layer using OTP/authenticator/security key.
+    - Root Account: Full access to AWS; avoid daily usage and enable MFA.
+    - Best Practice: Use IAM roles instead of hardcoded access keys.
+    - Groups: Assign permissions to groups rather than individual users.
+    Remember: IAM = Who can access what in AWS.
+
+10.
+
+12. VPC Endpoints (Short Notes)
+    VPC Endpoint: Allows private communication between resources in a VPC and AWS services without using the Internet or NAT Gateway.
+
+    1. Gateway Endpoint
+    - Supports only S3 and DynamoDB.
+    - Adds an entry to the route table.
+    - No ENI or private IP.
+    - Free of charge.
+
+    2. Interface Endpoint (PrivateLink)
+    - Supports 100+ AWS services.
+    - Creates an ENI in the subnet with a private IP.
+    - Uses AWS PrivateLink.
+    - Paid: hourly charges per AZ + data processing charges.
+
+    Gateway	        Interface
+    S3, DynamoDB	100+ services
+    Route table	    ENI
+    Free	        Paid
+    No private IP	Private IP
+
+    Remember:
+    - S3/DynamoDB → Gateway Endpoint.
+    - Other supported AWS services → Interface Endpoint.
+    - VPC Endpoints reduce NAT Gateway costs and keep traffic on the AWS network.
+
+13.Security Groups vs NACLs
+
+    Security Groups (SG)
+    - Instance-level firewall.
+    - Stateful – response automatically allowed.
+    - Only ALLOW rules.
+    - Default: Deny inbound, Allow outbound.
+    - All rules evaluated together.
+
+    NACL
+    - Subnet-level firewall.
+    - Stateless – explicitly allow inbound and outbound.
+    - Supports ALLOW and DENY.
+    - Default: Allow all (default NACL).
+    - Rules evaluated by number; lowest first, first match wins.
+    Interview tip: SG = Stateful, Instance-level. NACL = Stateless, Subnet-level.
+
+14 – Elastic IP (EIP)
+    - Elastic IP: Static public IPv4 address provided by AWS.
+    - Purpose: Keeps the same public IP even after stopping and starting an EC2 instance.
+    - Default Public IP: Can change when EC2 is stopped and started.
+    - Elastic IP: Remains the same until released or reassociated.
+    - Cost: Generally free when associated with a running resource; unused allocated IPv4 addresses are charged ($0.005/hour).
+    - Default limit: 5 Elastic IPs per Region (increase through Service Quotas).
+    - Alternatives: Route 53 (DNS) and Load Balancer for production applications.
+    Remember: Elastic IP = Permanent public IPv4 address for your AWS resource.
+
+15.Route 53 – AWS DNS Service
+
+        Definition:
+        Converts domain names into IP addresses and routes users to application endpoints.
+
+        Routing Policies:
+        1. Simple – Routes to a single resource.
+        2. Weighted – Distributes traffic by percentage (90/10).
+        3. Latency – Routes to the lowest-latency region.
+        4. Failover – Primary to secondary when primary fails.
+        5. Geolocation – Routes based on user's geographic location.
+        6. Multi-value – Returns multiple healthy IP addresses.
+
+        Health Checks:
+        - Monitors endpoint health from multiple locations.
+        - Detects healthy/unhealthy endpoints.
+        - Works with failover routing for disaster recovery.
+
+        Route 53 vs ALB:
+        - Route 53 – DNS-level routing between endpoints/regions.
+        - ALB – Distributes traffic among application targets (EC2, containers).
+        - Route 53 health checks – Monitor endpoints.
+        - ALB health checks – Monitor application targets.
+
+        Interview Point:
+        Route 53 handles DNS routing; ALB handles application load balancing.
+        
