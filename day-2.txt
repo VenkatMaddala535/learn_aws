@@ -1,0 +1,603 @@
+16 – AWS RDS 
+    1. What is RDS?
+    - RDS = Relational Database Service.
+    - AWS-managed relational database service.
+    - AWS manages provisioning, patching, backups and replication.
+    - Engines: MySQL, PostgreSQL, MariaDB, Oracle, SQL Server, Aurora.
+
+    2. Multi-AZ – High Availability (HA)
+    - Maintains Primary DB and Standby DB in different AZs.
+    - Uses synchronous replication (traditional Multi-AZ).
+    - If Primary fails, AWS automatically promotes Standby.
+    - Application reconnects using the same RDS endpoint.
+    - Standby is not used for read queries.
+    Purpose: High Availability.
+
+    3. Read Replicas – Read Scaling
+    - Creates additional read-only database replicas.
+    - Primary handles INSERT, UPDATE, DELETE.
+    - Replicas handle SELECT queries.
+    - Uses asynchronous replication.
+    - Replication lag can cause temporarily stale data.
+    - Supports replicas across AZs and regions.
+    Purpose: Improve read performance and reduce primary DB workload.
+
+    4. Synchronous vs Asynchronous
+    - Synchronous: Primary waits for replication confirmation before completing the write (in traditional Multi-AZ standby replication).
+    - Asynchronous: Primary doesn't wait for the replica to receive the update.
+    Replication Lag: Delay between updating the Primary DB and receiving that update on the Read Replica.
+    Example: Instagram profile update may temporarily show the old picture on a replica (illustrative example).
+
+    5. Automated Backups
+    - AWS automatically backs up RDS.
+    - Retention: 1–35 days.
+    - Supports Point-in-Time Recovery (PITR).
+    - Uses automated snapshots and transaction logs.
+
+    6. PITR – Point-in-Time Recovery
+    - Restore database to a specific time within the retention period.
+    - Useful for accidental deletion or incorrect updates.
+    - Can restore to a second-level recovery point within the available window.
+    - Restores into a new DB instance.
+    Example: Data deleted at 10:30 AM → Restore database to 10:29 AM.
+
+    7. Manual Snapshots
+    - Manually create a database snapshot.
+    - Captures database state at a particular time.
+    - Retained until manually deleted.
+    - Useful for long-term backup and before major changes.
+
+    8. Snapshot vs PITR
+    Snapshot	PITR
+    Fixed recovery point	Specific recovery time
+    Manually created	Uses automated backups and logs
+    Long-term retention	Up to 35 days
+    Point-in-time copy	Fine-grained recovery
+
+    Analogy:
+    - Snapshot = Photograph every 2 hours.
+    - PITR = Recording that lets you return to a particular moment.
+
+    Important interview points
+    1. Multi-AZ = Availability.
+    2. Read Replica = Performance.
+    3. Multi-AZ standby = Not readable in traditional Multi-AZ deployments.
+    4. Read Replica = Asynchronous replication.
+    5. PITR = Recover to a specific time.
+    6. Manual Snapshot = Long-term backup.
+    7. Production best practice = Multi-AZ + automated backups, and Read Replicas when read traffic requires them.
+
+17.DynamoDB – Short Notes 
+    DynamoDB: Fully managed NoSQL key-value and document database. Provides millisecond performance.
+    1. Partition Key
+    - Main key used to identify and distribute data.
+    - Must be unique if used alone.
+
+    2. Sort Key
+    - Optional key used with the partition key.
+    - Enables sorting and range queries.
+    - Combination of partition key + sort key must be unique.
+
+    3. Capacity Modes
+
+        On-demand
+        - Pay per request.
+        - AWS manages capacity automatically.
+        - Best for unpredictable traffic.
+
+        Provisioned
+        - Configure RCU (Read Capacity Unit) and WCU (Write Capacity Unit).
+        - Supports Auto Scaling.
+        - Best for predictable traffic.
+
+    4. RCU and WCU
+        - RCU: Read capacity.
+        - WCU: Write capacity.
+        - 1 RCU = 1 strongly consistent read/sec for an item up to 4 KB.
+        - 1 WCU = 1 write/sec for an item up to 1 KB.
+        
+    5. GSI – Global Secondary Index
+        - Different partition key.
+        - Optional sort key.
+        - Can be created after table creation.
+        - Eventually consistent reads only.
+        - Separate capacity in provisioned mode.
+    6. LSI – Local Secondary Index
+        - Same partition key, different sort key.
+        - Must be created during table creation.
+        - Supports strong and eventual consistency.
+        - Shares table capacity.
+    GSI vs LSI
+    GSI	                        LSI
+    Different partition key	    Same partition key
+    Can be created later	    Created with table
+    Eventually consistent only	Strong or eventual
+    Separate capacity	        Shared capacity
+
+    Remember:
+    - GSI = Different partition key.
+    - LSI = Same partition key, different sort key.
+    - On-demand = Unpredictable traffic.
+    - Provisioned = Predictable traffic.
+
+18: ELB – Elastic Load Balancing
+    ELB (Elastic Load Balancing): Distributes incoming traffic across multiple healthy backend targets (EC2 instances, etc.).
+    Types of Load Balancers
+    Load Balancer	Layer	Usage
+    ALB – Application Load Balancer	L7	HTTP/HTTPS
+    NLB – Network Load Balancer	L4	TCP/UDP
+    CLB – Classic Load Balancer	L4 & L7	Legacy load balancer
+    GWLB – Gateway Load Balancer	L3	Firewalls and security appliances
+
+    Important concepts
+    - ALB: Supports path-based and host-based routing.
+    - NLB: High performance, low latency and static IP addresses.
+    - CLB: Older generation; avoid for new deployments.
+    - GWLB: Distributes traffic to virtual firewalls and IDS appliances.
+
+    ALB Features
+        1. Target Groups: Groups of backend servers.
+        2. Health Checks: Checks backend server health.
+        3. SSL Termination: Handles HTTPS encryption at the load balancer.
+        4. Sticky Sessions: Routes a user's requests to the same backend.
+        5. Access Logs: Records incoming requests.
+
+    Interview tip: Focus mainly on ALB vs NLB, their OSI layers, protocols and use cases. CLB and GWLB only need basic awareness.
+
+19. Auto Scaling Groups (ASG)
+    ASG: Automatically maintains the desired number of EC2 instances, replaces unhealthy instances, and scales in/out based on demand.
+
+    1. Launch Template
+        EC2 configuration blueprint:
+        - AMI
+        - Instance type
+        - Key pair
+        - Security groups
+        - IAM role (instance profile)
+        - User data
+        Remember: Prefer Launch Templates over deprecated Launch Configurations.
+
+    2. Capacity
+        - Minimum: Minimum EC2 instances.
+        - Maximum: Maximum EC2 instances.
+        - Desired: Number of EC2 instances ASG tries to maintain.
+
+    3. Scaling Policies
+        Policy	Meaning
+        Target Tracking	Maintain CPU at 50%; AWS decides scaling
+        Step Scaling	CPU 60% → add 2; CPU 80% → add 4
+        Scheduled Scaling	9 AM → 10 EC2; 6 PM → 2 EC2
+
+    4. Health Checks
+        - EC2 health check: Checks EC2 instance health.
+        - ELB health check: Checks application health through the load balancer.
+        If an instance fails its health check, ASG can terminate it and launch a replacement.
+
+    Remember: ELB health checks are useful for web applications because an EC2 instance can be running while its application is down.
+
+20 – CloudWatch (Short Notes)
+    CloudWatch = AWS Monitoring Service.
+
+    1. Metrics
+        Numerical data used to monitor AWS resources.
+        - CPU utilization
+        - Network In/Out
+        - Disk I/O
+        - EC2 Status Checks
+        - Memory and disk usage → Requires CloudWatch Agent.
+
+    2. Alarms
+        Monitor metrics and trigger actions when thresholds are crossed.
+        Example: CPU greater than 80%.
+
+        Actions:
+        - SNS → Send notifications.
+        - Auto Scaling → Add or remove EC2 instances.
+        - Systems Manager → Automation.
+        Three states:
+        - OK – Normal.
+        - ALARM – Threshold breached.
+        - INSUFFICIENT_DATA – Not enough data.
+
+    3. Logs
+        Collects and stores application and system logs.
+        - Log Group → Collection of logs.
+        - Log Stream → Logs from a source.
+        - Log Event → Individual log entry.
+        - Logs Insights → Query and search logs.
+        - Retention → Configure how long logs are stored.
+
+    4. Dashboards
+        Visual representation of monitoring data in one place.
+
+        Example: CPU, memory, network traffic and alarms.
+
+    Remember these four:
+    Feature	Purpose
+    Metrics	What is happening?
+    Alarms	Notify or take action
+    Logs	What happened?
+    Dashboards	Visualize everything
+
+    Interview point: CloudWatch = Monitoring; CloudTrail = API activity and auditing.
+
+21.AWS CloudTrail
+    CloudTrail = Records everything happening in AWS.
+    - Management Events: Changes to AWS resources.
+    - Example: Create EC2, delete EC2, change Security Group.
+    - Data Events: Actions on data.
+    - Example: Upload/download files from S3.
+    - S3: Stores CloudTrail logs.
+    - CloudWatch: Can monitor CloudTrail logs.
+    - Multi-region trail: Tracks activities across all AWS regions.
+    - Integrity validation: Helps detect if logs are modified.
+    Real-time example:
+
+    Someone deleted your EC2 instance. CloudTrail tells you:
+    - Who deleted it?
+    - When did they delete it?
+    - From which IP address?
+    Remember for interviews:
+    - CloudTrail = Who did what in AWS?
+    - CloudWatch = How is AWS performing?
+
+22.SNS and SQS – Short Notes
+    1. SNS (Simple Notification Service)
+        - Push-based messaging.
+        - Sends one message to multiple subscribers.
+        - Example: Email, SMS, Lambda.
+        - Remember: One-to-many.
+    2. SQS (Simple Queue Service)
+        - Pull-based messaging.
+        - Stores messages until consumers process and delete them.
+        - Decouples services.
+        - Remember: Message queue.
+    3. SQS Types
+        - Standard: High throughput, ordering not guaranteed. Example: Notifications.
+        - FIFO: Maintains message order and supports deduplication. Example: Bank transactions.
+    4. DLQ (Dead Letter Queue)
+        - Stores messages that repeatedly fail processing.
+        - Helps investigate failed messages.
+    5. Decoupling
+        - Services communicate through SQS instead of calling each other directly.
+        - If one service is down, messages remain in the queue.
+
+    Interview tip:
+    - SNS = Push
+    - SQS = Pull
+    - Standard = Speed
+    - FIFO = Order
+    - DLQ = Failed messages
+
+23.AWS Lambda 
+    Lambda: Runs code without managing servers. Pay only for execution time.
+    1. Triggers (When Lambda runs)
+        Trigger	Purpose
+        S3	File uploaded/deleted
+        API Gateway	HTTP request
+        SQS	Message processing
+        EventBridge	Scheduled tasks / events
+        DynamoDB Streams	Database changes
+
+    2. Cold Start
+        - First execution takes extra time to initialize the environment.
+        - Subsequent executions can reuse the warm environment.
+
+    3. Concurrency
+        - Number of Lambda executions running simultaneously.
+        - Default limit: 1,000 per Region.
+        - Reserved concurrency: Reserve capacity for important functions.
+
+    4. Timeout
+        - Maximum execution time: 15 minutes.
+        - If execution exceeds timeout, Lambda stops it.
+
+    5. Important Limits
+        - Memory: Up to 10 GB.
+        - Default /tmp storage: 512 MB.
+        - Deployment package: 250 MB unzipped.
+
+    Kubernetes          Comparison
+    Kubernetes	        AWS
+    Job	Event-triggered Lambda
+    CronJob	            Lambda + EventBridge
+
+    Remember: Lambda executes code; triggers decide when to execute it.
+
+24.ACM (AWS Certificate Manager)
+    What is ACM?
+        ACM is an AWS service that manages HTTPS certificates for us. We don't need to manually manage certificate renewals.
+    How it works
+        Imagine you have a website myapp.com running on EC2.
+        1. You want users to access your website securely using HTTPS.
+        2. You request a TLS certificate from ACM.
+        3. ACM asks you to prove that you own myapp.com.
+        4. You add a CNAME record in your DNS (Route 53).
+        5. ACM verifies the domain and issues the certificate.
+        6. Attach the certificate to your ALB.
+        7. Users can now access your website using HTTPS.
+    Important points to remember
+        - DNS validation: AWS gives a CNAME record. Add it to DNS to prove domain ownership.
+        - Email validation: AWS sends an email with a verification link.
+        - Auto-renewal: ACM automatically renews eligible certificates.
+        - ALB: Attach the certificate to port 443 (HTTPS).
+        - HTTP to HTTPS: Configure ALB to redirect port 80 to 443.
+        - CloudFront: Its ACM certificate must always be in us-east-1.
+        - EC2: Standard public ACM certificates cannot be exported for direct installation on EC2.
+    Simple real-world understanding
+    Service	        Responsibility
+    ACM	Provides and manages TLS certificates
+    Route 53	Manages DNS records
+    ALB	Handles HTTPS connections
+    Browser	Checks whether the certificate is trusted
+
+    Interview question: Why use ACM?
+
+    To avoid manually purchasing, installing, tracking and renewing TLS certificates for AWS services.
+
+25.AWS CloudFormation – Short Notes
+    CloudFormation: AWS-native IaC service. Creates AWS resources automatically using YAML or JSON templates.
+    Important Concepts
+        - Template: YAML/JSON file describing AWS resources.
+        - Stack: Collection of resources created from a template.
+        - Change Set: Preview changes before applying (similar to terraform plan).
+        - Execute Change Set: Apply the reviewed changes (similar to terraform apply).
+        - Nested Stack: Reuse smaller stacks inside another stack.
+        - Stack Set: Deploy stacks across multiple AWS accounts and regions.
+        - Drift Detection: Finds manual changes made outside CloudFormation.
+    CloudFormation vs Terraform
+    CloudFormation	    Terraform
+    AWS-specific	    Multi-cloud
+    YAML / JSON	        HCL
+    AWS-managed	        Terraform CLI
+    Change Set	        terraform plan
+    Execute Change Set	terraform apply
+
+    Interview point: CloudFormation is AWS-native IaC, while Terraform supports multiple cloud providers.
+
+26 – AWS CLI (Short Notes)
+    1. AWS CLI
+        - Interact with AWS using terminal commands.
+        - Example: aws s3 ls
+
+    2. Named Profiles
+        - Manage multiple AWS accounts/configurations.
+        - Create: aws configure --profile dev
+        - Use: aws s3 ls --profile dev
+
+    3. Credentials Chain
+        AWS checks credential sources in priority order:
+        1. Command-line options (configuration)
+        2. Environment variables
+        3. ~/.aws/credentials
+        4. ~/.aws/config
+        5. Container credentials
+        6. EC2 IAM Role
+
+    4. IMDS
+        - Full form: Instance Metadata Service.
+        - EC2 uses IMDS to retrieve temporary IAM Role credentials.
+
+    5. Security Best Practices
+        - EC2 → IAM Role.
+        - ECS → Task Role.
+        - Lambda → Execution Role.
+        - Humans → IAM Identity Center (SSO).
+        - Never hardcode or upload AWS access keys to GitHub.
+
+    Interview tip: IAM Roles provide temporary credentials; Named Profiles help manage multiple AWS configurations.
+
+27.AWS Tags and Cost Allocation
+
+    1. What are Tags?
+        - Tags are Key-Value pairs attached to AWS resources.
+        - Used for organization, ownership, cost tracking and automation.
+
+        Example:
+        tags = {
+        Environment = "dev"
+        Team        = "DevOps"
+        Project     = "TaskForge"
+        CostCenter  = "CC101"
+        }
+
+    2. Important Tags
+        - Environment → dev / staging / production
+        - Owner / Team → Who manages the resource
+        - Project → Which application uses it
+        - CostCenter → Which department pays the bill
+
+    3. Cost Allocation
+        - Activate tags in AWS Billing Console.
+        - AWS uses activated tags for cost analysis.
+        - Cost Explorer helps filter and group costs by tags.
+
+    Remember
+    - Tags → Identify AWS resources.
+    - Cost Allocation Tags → Enable cost tracking.
+    - Cost Explorer → Analyze AWS spending.
+
+    Interview Point: Tags help organizations manage resources, identify ownership and track AWS costs.
+
+28.ECS – Elastic Container Service
+
+    ECS:AWS service to run and manage Docker containers.
+
+    Main Components
+        - Task Definition: Blueprint containing Docker image, CPU, memory, ports and environment variables.
+        - Task: Running instance of a task definition.
+        - ECS Service: Maintains the desired number of running tasks. Restarts tasks if they fail.
+
+    Fargate vs EC2
+        - Fargate: Serverless container compute. AWS manages infrastructure; no EC2 management required.
+        - EC2: We manage EC2 instances where containers run.
+
+    Task Role
+        - IAM role attached to an ECS task.
+        - Gives containers permission to access AWS services like S3, DynamoDB and SQS.
+        - Never hardcode AWS access keys.
+
+    Task Role vs Execution Role
+        - Task Role → Application permissions.
+        - Execution Role → ECS permissions to pull ECR images and send CloudWatch logs.
+
+    Docker + AWS Workflow
+        1. Docker Engine → Build Docker image.
+        2. ECR → Store Docker image.
+        3. ECS → Manage containers.
+        4. Fargate / EC2 → Run containers.
+
+    Remember:
+        - Docker Engine = Build and run containers.
+        - ECR = Store images.
+        - ECS = Orchestrate containers.
+        - Fargate = Serverless container compute.
+
+29.AWS ECR (Elastic Container Registry)
+    1. What is ECR?
+        - AWS-managed private Docker image registry.
+        - Similar to Docker Hub, but hosted in AWS.
+        - Stores container images in repositories.
+        
+    2. How it works
+        1. Build Docker image.
+        2. Create an ECR repository.
+        3. Authenticate Docker with ECR.
+        4. Push image to ECR.
+        5. ECS/EKS pulls image and runs containers.
+    3. Lifecycle Policies
+        - Automatically delete old or unused images.
+        - Example: Keep latest 10 images.
+        - Delete untagged images after 7 days.
+        - Helps reduce storage costs.
+    4. Image Scanning
+        - Identifies vulnerabilities in container images.
+        - Uses Amazon Inspector integration.
+        - Helps detect vulnerable OS packages and application dependencies.
+    5. Authentication
+        - ECR authentication token expires every 12 hours.
+        - Use AWS CLI to authenticate Docker.
+        - Kubernetes needs automatic credential refresh to keep pulling private images.
+    6. Important Commands
+        # Login to ECR
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <ECR-URL>
+        # Build image
+        docker build -t myapp .
+        # Tag image
+        docker tag myapp:latest <ECR-URL>/myapp:latest
+        # Push image
+        docker push <ECR-URL>/myapp:latest
+
+    7. Real-world DevOps usage
+        In a Jenkins CI/CD pipeline:
+        - Jenkins builds Docker image.
+        - Jenkins pushes image to ECR.
+        - ArgoCD deploys updated image through Kubernetes manifests.
+        - Kubernetes pulls image from ECR.
+        Interview point: ECR is a managed container image registry, not a container runtime. It stores images; ECS/EKS runs containers.
+
+30.EKS – Elastic Kubernetes Service
+
+    - EKS: AWS managed Kubernetes service.
+    - Control Plane: AWS manages API Server, etcd and Scheduler.
+    - Worker Nodes: Run application Pods.
+
+    Node Types:
+        1. Managed Node Groups: AWS manages EC2 worker nodes.
+        2. Self-managed Nodes: We manage EC2 worker nodes.
+        3. Fargate: Serverless Pods; no EC2 worker nodes to manage.
+
+    Important Points:
+        - Uses kubectl to interact with EKS.
+        - Existing Kubernetes YAML files work on EKS.
+        - ECR stores container images.
+        - EBS/EFS provide persistent storage.
+        - Spot Instances reduce EC2 costs.
+
+    Cost:
+        - Control Plane: $0.10/hour (standard pricing tier).
+        - EC2 Nodes: Separate charges.
+        - Fargate: Separate compute charges.
+
+31.Elastic Beanstalk:
+    - PaaS service used to deploy and manage web applications.
+    - Upload code; AWS automatically provisions infrastructure.
+    - Can create EC2, ALB, Auto Scaling and CloudWatch integration.
+    - Supports Python, Java, Node.js, Go, Docker, etc.
+    - Underlying AWS resources are accessible and customizable.
+    - Best for developers who want to focus on application code instead of infrastructure management.
+
+    Remember:
+    Elastic Beanstalk = Upload code + AWS manages deployment and infrastructure.
+
+32.AWS Systems Manager (SSM)
+
+    - SSM centrally manages EC2 and on-premises servers.
+    - SSM Agent communicates between EC2 and AWS Systems Manager.
+
+    Important components:
+
+    1. Session Manager:
+    - SSH alternative.
+    - No port 22 or SSH keys required.
+    - Uses IAM for access control.
+    - Supports session auditing and logging.
+
+    2. Parameter Store:
+    - Stores configuration and secrets as key-value pairs.
+    - Supports hierarchical naming.
+    - SecureString encrypts sensitive values using KMS.
+
+    3. Patch Manager:
+    - Automatically installs OS updates.
+    - Uses patch baselines and maintenance windows.
+
+    4. Run Command:
+    - Executes commands on multiple EC2 instances.
+    - No manual SSH required.
+
+    Main advantage:
+    Centralized server management with improved security.
+
+    Important       components
+    Component	    Purpose
+    SSM Agent	    Agent installed on EC2 that communicates with SSM
+    Session Manager	Connect to EC2 without SSH or port 22
+    Parameter Store	Store application configurations and secrets
+    Patch Manager	Automatically install OS updates
+    Run Command	    Execute commands on multiple EC2 instances
+
+33.AWS Backup:
+    - Centralized backup management across AWS services.
+    - Supports EC2, EBS, RDS, EFS, DynamoDB, etc.
+    - Backup Plan defines frequency and retention.
+    - Backup Vault stores backups.
+    - Supports cross-region and cross-account backups.
+    - Helps with disaster recovery and ransomware protection.
+
+34.AWS Service Quotas
+    - Centralized service to view and manage AWS service limits.
+    - Supports EC2, VPC, Lambda, S3, RDS, EBS, EKS, ELB, etc.
+    - Example: EC2 vCPU limits, Lambda concurrent executions, VPC limits.
+    - Helps prevent resource creation failures due to quota limits.
+    - Navigate to Service Quotas → AWS Services → Select service.
+    - Request quota increases when required.
+    - Some quotas are adjustable; others are fixed.
+    - AWS may require approval for quota increases.
+    Remember: Service Quotas = Centralized quota management for AWS services.
+
+35.AWS Trusted Advisor:
+    - Scans AWS account and provides recommendations.
+    - Helps improve cost, performance, security and reliability.
+
+    5 Categories:
+    1. Cost Optimization - Identify idle resources and reduce costs.
+    2. Performance - Identify performance issues.
+    3. Security - Find security risks and misconfigurations.
+    4. Fault Tolerance - Check backups and Multi-AZ.
+    5. Service Limits - Warn about approaching service quotas.
+
+    Free: 7 core checks.
+    Business/Enterprise: 100+ checks and API access.
+
+    Note: Trusted Advisor recommends improvements; it doesn't automatically fix resources.
